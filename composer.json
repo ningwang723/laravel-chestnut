@@ -15,7 +15,7 @@
     }
   },
   "require": {
-    "php" : "^7.2.5|^8.0",
+    "php": "^7.2.5|^8.0",
     "illuminate/auth": "^6.0|^7.0|^8.0",
     "illuminate/container": "^6.0|^7.0|^8.0",
     "illuminate/contracts": "^6.0|^7.0|^8.0",
@@ -29,7 +29,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Chestnut\\ChestnutServiceProvider"
+        "Chestnut\\Providers\\LaravelServiceProvider"
       ],
       "aliases": {
         "Shell": "Chestnut\\Facades\\Shell"

@@ -34,22 +34,16 @@ class LaravelServiceProvider extends AbstractServiceProvider
         ], 'translate');
 
         $this->loadRoutesFrom(__DIR__ . '/routes.php');
-        $this->loadViewsFrom(__DIR__ . '/views/', 'chestnut');
-        $this->loadTranslationsFrom(__DIR__ . '/translates', 'chestnut');
+        // $this->loadViewsFrom(__DIR__ . '/views/', 'chestnut');
+        // $this->loadTranslationsFrom(__DIR__ . '/translates', 'chestnut');
         $this->loadMigrationsFrom(__DIR__ . "/migrations");
 
         if (!app()->runningInConsole()) {
-            app("shell")->nutsIn($this->app->config->get('chestnut.dashboard.nutsIn', app_path('Nuts')));
+            app("shell")->registerRepositories($this->app->config->get('chestnut.dashboard.nutsIn'), "app");
 
             if (config('chestnut.auth.rbac', false)) {
-                app("shell")->nuts([new Manager(), new Role(), new Permission()]);
+                app("shell")->registerRepositories(__DIR__ . "/../Auth/Nuts", "rbac");
             }
-
-            Uploader::registerRoute($this->app->router);
-
-            Gate::before(function ($user) {
-                return $user->hasRole('Chestnut Manager') ? true : null;
-            });
         }
     }
 }
