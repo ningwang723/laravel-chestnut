@@ -1,0 +1,17 @@
+<?php
+
+namespace DummyNamespace;
+
+use Chestnut\Dashboard\Nut;
+use Chestnut\Facades\Shell;
+
+class DummyClass extends Nut
+{
+    public function fields(): array
+    {
+        return [
+            // code repository fields here
+            Shell::ID()
+        ];
+    }
+}
