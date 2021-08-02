@@ -2,7 +2,7 @@
 
 namespace Chestnut\Dashboard;
 
-use Laravel\Lumen\Routing\Router;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Cache;
