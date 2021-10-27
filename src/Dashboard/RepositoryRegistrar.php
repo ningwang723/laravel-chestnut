@@ -24,13 +24,10 @@ class RepositoryRegistrar
     public function register($directory, $package)
     {
         $repositories = $this->getRepositories($directory, $package);
-        $hasChanged = $this->repositoriesHasChanged($directory, $package);
 
         foreach ($repositories as $repository) {
-            $this->resolveRepository($repository, $hasChanged);
+            $this->resolveRepository($repository);
         }
-
-        Cache::forever("repositoriesLastModified.{$package}", File::lastModified($directory));
     }
 
     public function getViews()
@@ -40,7 +37,7 @@ class RepositoryRegistrar
         })->all());
     }
 
-    public function resolveRepository($repository, $hasChanged)
+    public function resolveRepository($repository)
     {
         $prefix = Str::plural(strtolower(class_basename($repository)));
 
@@ -50,9 +47,9 @@ class RepositoryRegistrar
 
         $callback = $callback->bindTo($this);
 
-        $this->router->group(['prefix' => "api/" . $prefix, 'middleware' => 'auth:chestnut'], $callback);
+        $this->router->group(['prefix' => "chestnut/" . $prefix, 'middleware' => ['web', 'auth:sanctum']], $callback);
 
-        $this->views->add(new RepositoryView($repository, $hasChanged));
+        $this->views->add(new RepositoryView($repository));
     }
 
     public function registerRepository($repository)
@@ -77,12 +74,12 @@ class RepositoryRegistrar
 
     public function addRepositoryDetail($repository)
     {
-        $this->router->get("{id:[0-9]+}", $this->getRepositoryAction($repository, "detail"));
+        $this->router->get("{id}", $this->getRepositoryAction($repository, "detail"))->where("id", "[0-9]+");
     }
 
     public function addRepositoryEdit($repository)
     {
-        $this->router->get("{id:[0-9]+}/edit", $this->getRepositoryAction($repository, "edit"));
+        $this->router->get("{id}/edit", $this->getRepositoryAction($repository, "edit"))->where("id", "[0-9]+");
     }
 
     public function addRepositoryCreate($repository)
@@ -97,12 +94,12 @@ class RepositoryRegistrar
 
     public function addRepositoryUpdate($repository)
     {
-        $this->router->put("{id:[0-9]+}", $this->getRepositoryAction($repository, "update"));
+        $this->router->put("{id}", $this->getRepositoryAction($repository, "update"))->where("id", "[0-9]+");
     }
 
     public function addRepositoryDestroy($repository)
     {
-        $this->router->delete("{id:[0-9]+}", $this->getRepositoryAction($repository, "destroy"));
+        $this->router->delete("{id}", $this->getRepositoryAction($repository, "destroy"))->where("id", "[0-9]+");
     }
 
     public function getRepositoryAction($repository, $action)
@@ -157,12 +154,6 @@ class RepositoryRegistrar
 
         return $nuts;
     }
-
-    public function repositoriesHasChanged($directory, $package)
-    {
-        return Cache::get("repositoriesLastModified.{$package}") < File::lastModified($directory);
-    }
-
     /**
      * Register Nut resources in given directory
      *
@@ -172,13 +163,7 @@ class RepositoryRegistrar
      */
     public function getRepositories($directory, $package): array
     {
-        if (!$this->repositoriesHasChanged($directory, $package)) {
-            return Cache::get("repositories.${package}");
-        }
-
         $repositories = $this->getRepositoriesInDirectory($directory);
-
-        Cache::forever("repositories.${package}", $repositories);
 
         return $repositories;
     }

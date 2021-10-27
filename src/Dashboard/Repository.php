@@ -8,11 +8,13 @@ use Chestnut\Dashboard\ORMDriver\Driver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Laravel\Lumen\Routing\Controller;
+use Illuminate\Routing\Controller;
 
 
 abstract class Repository extends Controller
 {
+    use GetResourceNames;
+
     protected $namespace = "App\Models";
 
     protected $ormDrivers = [];
@@ -44,36 +46,12 @@ abstract class Repository extends Controller
         $this->driver = $driver;
     }
 
-    public function getModelName()
-    {
-        $name = explode("\\", get_class($this));
-
-        return $this->namespace . '\\' . array_pop($name);
-    }
-
-    public function getName()
-    {
-        $name = explode("\\", get_class($this));
-        $name = array_pop($name);
-
-        return Str::plural(strtolower($name));
-    }
-
     /**
      * @return Field[]
      */
     abstract function fields(): array;
 
-    public function getFields($view = "index"): Collection
-    {
-        if (isset(static::$modeForView[$view])) {
-            $view = static::$modeForView[$view];
-        }
 
-        return (new FieldCollection($this->fields()))->filter(function ($field) use ($view) {
-            return $field->showOn($view);
-        });
-    }
 
     public function actions(): array
     {
@@ -94,6 +72,8 @@ abstract class Repository extends Controller
         if (isset($this->ormDrivers[$driver])) {
             return $this->ormDrivers[$driver];
         }
+
+        $driver = config("chestnut.dashboard.drivers." . $driver);
 
         return $this->makeDriver($driver);
     }
@@ -139,211 +119,78 @@ abstract class Repository extends Controller
         $this->ormDriver[$driver] = $driverInstance;
     }
 
-    public function newQuery($driver = null)
+    public function getResource()
     {
-        return $this->getORMDriver($driver)->getQuery();
+        return $this->getORMDriver($this->driver)->getResource($this);
     }
 
-    public function getOptions(Request $request)
+    public function getFields($view = "index"): Collection
     {
-        $fields = $this->getFields($request->get("view", "index"));
-
-        if ($request->view !== "index") {
-            $model = $this->newQuery();
-
-            $fields->each(function ($relation) use ($model) {
-                if (method_exists($relation, 'getOptions')) {
-                    $relation->getOptions($model);
-                }
-            });
-
-            return ["errno" => 0, "data" => $fields->toFront()];
+        if (isset(static::$modeForView[$view])) {
+            $view = static::$modeForView[$view];
         }
 
-        $actions = $this->actions();
-        $cards = $this->cards();
-
-        return ["errno" => 0, "data" => [
-            "fields" => [
-                "index" => $fields->toFront()
-            ],
-            "actions" => $actions,
-            "cards" => $cards
-        ]];
+        return (new FieldCollection($this->fields()))->filter(function ($field) use ($view) {
+            return $field->showOn($view);
+        });
     }
 
     public function index(Request $request)
     {
-        $fields = $this->getFields();
-
-        $relations = $fields->getRelationFields();
-
-        $query = $this->newQuery($this->driver)->select($fields->getProperties());
-
-        $query = $this->processRelations($relations, $query);
-
-        $query = $this->searchRepository($request, $query);
-        $query = $this->sortRepository($request, $query, $fields->filter(function ($field) {
-            return $field->hasAttribute('sortable');
-        }));
-
-        $perPage = $request->get('per_page', 10);
-
-        $model = $query
-            ->paginate($perPage)
-            ->withPath($this->getName())
-            ->onEachSide(1)->withQueryString();
-
-        $model->makeHidden($relations->getHiddens());
+        $resource = $this->getResource();
 
         return [
             "errno" => 0,
-            "data" => $model
+            "data" => $resource->index($request)
         ];
     }
 
     public function create(Request $request)
     {
-        $fields = $this->getFields("creating");
-
-        return $this->toResponse($request, null, $fields);
+        // return $this->toResponse($request, null, $fields);
     }
 
     public function edit(Request $request, $id)
     {
-        $fields = $this->getFields("updating");
+        $resource = $this->getResource();
 
-        $relations = $fields->getRelationFields();
-
-        $query = $this->newQuery()->select($fields->getProperties());
-
-        $query = $this->processRelations($relations, $query);
-
-        $model = $query->find($id);
-
-        $model->makeHidden($relations->getHiddens());
-
-        return $this->toResponse($request, $model);
+        return $this->toResponse($request, $resource->edit($id));
     }
 
     public function update(Request $request, $id)
     {
-        $model = $this->newQuery()->find($id);
+        $resource = $this->getResource();
 
-        $this->applyAttributesToModel("edit", $request, $model);
-
-        $model->save();
+        $resource->update($request, $id);
 
         return ['errno' => 0, 'message' => "保存成功"];
     }
 
     public function store(Request $request)
     {
-        $model = $this->newQuery();
+        $resource = $this->getResource();
 
-        $this->applyAttributesToModel("create", $request, $model);
-
-        $model->publisher()->associate(auth("chestnut")->user());
-
-        $model->save();
+        $resource->store($request);
 
         return ['errno' => 0, 'message' => "保存成功"];
     }
 
     public function detail(Request $request, $id)
     {
-        $fields = $this->getFields("detail");
+        $resource = $this->getResource();
 
-        $relations = $fields->getRelationFields();
-
-        $query = $this->newQuery()->select($fields->getProperties());
-
-        $query = $this->processRelations($relations, $query);
-
-        $model = $query->find($id);
-
-        $model->makeHidden($relations->getHiddens());
-
-        return $this->toResponse($request, $model);
+        return [
+            "errno" => 0,
+            "data" => $resource->detail($id)
+        ];
     }
 
-    public function processRelations($relations, $query)
-    {
-        $query = $query->addSelect($relations->reduce(function ($acc, $field) {
-            if ($field instanceof HasManyThrough) {
-                return $acc;
-            }
 
-            array_push($acc, $field->prop);
-
-            if ($field instanceof MorphTo) {
-                array_push($acc, $field->morphType());
-            }
-
-            return $acc;
-        }, []));
-
-        $requestRelations = [];
-
-        foreach ($relations as $relation) {
-            $requestRelations[$relation->relation] =  function ($query) use ($relation) {
-                $query->select("id", $relation->title());
-            };
-        }
-
-        return $query->with($requestRelations);
-    }
-
-    public function searchRepository(Request $request, $query)
-    {
-        if ($request->has("keyword")) {
-            $keyword = $request->keyword;
-
-            foreach (static::$search as $search) {
-                $query = $query->orWhere($search, 'like', "%{$keyword}%");
-            }
-        }
-
-        return $query;
-    }
-
-    public function sortRepository(Request $request, $query, $sortable)
-    {
-        if ($request->has('sort')) {
-            $sorts = $request->sort;
-            $sorts = explode(",", $sorts);
-
-            foreach ($sorts as $sort) {
-                $sort = explode("|", $sort);
-
-                $colomn = $sort[0];
-                $order = isset($sort[1]) ? $sort[1] : 'desc';
-
-                $query = $query->orderBy($colomn, $order);
-            }
-        } else {
-            $query = $query->orderBy("created_at", $request->get('created_at', 'desc'));
-        }
-
-        return $query;
-    }
-
-    public function applyAttributesToModel($view, $request, $model)
-    {
-        $fields = $this->getFields($view)->filter(function ($field) {
-            return !$field->isReadonly();
-        });
-
-        $fields->each(function ($field) use ($request, $model) {
-            $field->fillAttributeFromRequest($request, $model);
-        });
-    }
 
     public function destroy(Request $request, $id)
     {
-        $model = $this->newQuery()->find($id);
-
-        $model->delete();
+        $resource = $this->getResource();
+        $resource->destroy($id);
 
         return ['errno' => 0, 'message' => "删除成功"];
     }
@@ -357,25 +204,9 @@ abstract class Repository extends Controller
         return $response;
     }
 
-    public function calculateStatistic(Request $request)
-    {
-        $statistic = new $request->statistic;
-
-        $data = $statistic->calculate($request);
-
-        return [
-            'errno' => 0,
-            'data' => $data
-        ];
-    }
-
     public function toResponse(Request $request, $model = null, $fields = null)
     {
         $response = ['errno' => 0, 'data' => $model];
-
-        if (!empty($fields)) {
-            $response['fields'] = array_values($fields);
-        }
 
         return $response;
     }

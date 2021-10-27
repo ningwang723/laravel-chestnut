@@ -4,10 +4,10 @@ namespace Chestnut\Dashboard\Fields;
 
 class ID extends Text
 {
-    public function __construct($label = "ID")
+    public function __construct($prop = "id", $label = "ID")
     {
-        parent::__construct("id", $label);
+        parent::__construct($prop, $label);
 
-        $this->hideWhenCreating()->readonly()->sortable();
+        $this->setAttribute("primary", true)->hideWhenCreating()->readonly()->sortable();
     }
 }

@@ -29,9 +29,9 @@ abstract class Field implements JsonSerializable
     /**
      * Field Constructor
      *
-     * @param {String} $prop  property name
-     * @param {String} $label property show label text
-     * @param {String} $type  property type
+     * @param string $prop  property name
+     * @param string $label property show label text
+     * @param string $type  property type
      */
     public function __construct($prop, $label = null, $callback = null)
     {

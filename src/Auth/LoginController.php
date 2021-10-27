@@ -6,37 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Chestnut\Auth\Events\WechatRegisterEvent;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 
 class LoginController extends Controller
 {
-
-    public function __construct()
-    {
-        $this->middleware("auth:chestnut", ['except' => ['login', 'refresh', "wechat_login", 'wechat_refresh']]);
-        $this->middleware("auth:api", ['except' => ['login', 'refresh', "wechat_login", 'wechat_refresh']]);
-    }
-
     /**
      * Get a JWT via given credentials.
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login()
+    public function login(Request $request)
     {
-        $password = request("password");
-        $account  = request("account");
+        $credentials = $request->only("phone", "password");
 
-        if ($token = auth('chestnut')->attempt(["phone" => $account, "password" => $password])) {
+        if (Auth::guard("chestnut")->attempt($credentials)) {
+            $request->session()->regenerate();
 
-            return $this->respondWithToken($token);
+            return ["msg" => "登陆成功。"];
         }
 
-        if ($token = auth('chestnut')->attempt(["email" => $account, "password" => $password])) {
-            return $this->respondWithToken($token);
-        }
-
-        return response()->json(['error' => 'Unauthorized'], 401);
+        return ["error" => "账号或密码错误，请确认后再尝试。"];
     }
 
     public function wechat_login(Request $request)
@@ -121,9 +111,17 @@ class LoginController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function me()
+    public function me(Request $request)
     {
-        return response()->json(auth('chestnut')->user());
+        $user = $request->user();
+
+        if ($user->roles->where('name', 'Chestnut Manager')) {
+            $user->isSuper = true;
+        }
+
+        $user->roles->makeHidden("pivot");
+
+        return $user;
     }
 
     /**

@@ -63,7 +63,7 @@ abstract class RelationField extends Select
 
     public function hiddenProperties()
     {
-        return [$this->prop];
+        return $this->prop ? [$this->prop] : [];
     }
 
     public function jsonSerialize()

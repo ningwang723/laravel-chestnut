@@ -2,20 +2,17 @@
 
 namespace Chestnut\Auth\Models;
 
-use Illuminate\Auth\Authenticatable;
-use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
-use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class Manager extends Model implements AuthenticatableContract, AuthorizableContract, JWTSubject
+class Manager extends Authenticatable
 {
-    use Authenticatable, Authorizable, HasFactory, SoftDeletes, hasRoles;
+    use HasApiTokens, Notifiable, HasFactory, SoftDeletes, hasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -32,13 +29,10 @@ class Manager extends Model implements AuthenticatableContract, AuthorizableCont
      * @var array
      */
     protected $hidden = [
-        'password', 'api_token', 'refresh_token', 'session_key', 'openid',
+        'password', 'api_token', 'refresh_token', 'session_key', 'openid', 'remember_token', 'created_at', 'updated_at', 'deleted_at'
     ];
 
-    public function setPasswordAttribute($value)
-    {
-        $this->attributes['password'] = Hash::make($value);
-    }
+    protected $with = ['roles:id,name', 'permissions'];
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.

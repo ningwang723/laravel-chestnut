@@ -4,6 +4,7 @@ namespace Chestnut\Command;
 
 use Chestnut\Auth\Models\Manager;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 class NutManagerCommand extends Command
@@ -54,7 +55,7 @@ class NutManagerCommand extends Command
             }
         }
 
-        $data['password'] = $password;
+        $data['password'] = Hash::make($password);
 
         while (empty($name)) {
             $name = $this->ask("Enter user's name");

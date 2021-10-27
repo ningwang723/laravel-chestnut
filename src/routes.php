@@ -1,37 +1,35 @@
 <?php
 
-/** @var \Laravel\Lumen\Routing\Router $router */
-$router = app('router');
+use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
-$router
-    ->group(['prefix' => 'api/auth', 'namespace' => 'Chestnut\Auth'], function ($router) {
-        $router->post('login', 'LoginController@login');
-        $router->post('wechat_login', 'LoginController@wechat_login');
-        $router->post('logout', 'LoginController@logout');
-        $router->post('refresh', 'LoginController@refresh');
-        $router->post('wechat_refresh', 'LoginController@wechat_refresh');
-        $router->post('me', 'LoginController@me');
-    });
+Route::middleware(['web'])->prefix("chestnut")
+    ->group(function () {
+        Route::namespace("Chestnut\Auth")->group(function () {
+            Route::middleware('auth:sanctum')->get('profile', 'LoginController@me');
 
-$router->group(['prefix' => 'api'], function ($router) {
-    $router->group(['middleware' => 'auth:chestnut'], function ($router) {
-        $router->get('/repositories', function () {
-            return array_merge(['errno' => 0, 'message' => 'request success'], app('shell')->toArray());
+            Route::post('login', 'LoginController@login');
+
+            Route::post('wechat_login', 'LoginController@wechat_login');
+            Route::post('logout', 'LoginController@logout');
+            Route::post('refresh', 'LoginController@refresh');
+            Route::post('wechat_refresh', 'LoginController@wechat_refresh');
+        });
+
+        Route::middleware("auth:sanctum")->post('statistic', function (Request $request) {
+            $statistic = new $request->statistic;
+
+            $data = $statistic->calculate($request);
+
+            return [
+                'errno' => 0,
+                'data' => $data
+            ];
+        });
+
+        Route::get('/settings', function () {
+            $data = app("shell")->jsonSerialize();
+
+            return ['code' => 200, 'message' => 'request success', 'data' => $data];
         });
     });
-
-    $router->get('/settings', function () {
-        $data = [];
-        if (!empty(app('auth')->guard("chestnut")->user())) {
-            $data = app("shell")->jsonSerialize();
-        }
-
-        $data = array_merge($data, [
-            "appName"     => env("APP_NAME", "CHESTNUT"),
-            "description" => env("DESCRIPTION", "Chestnut Resource Manage System"),
-            "routePrefix" => env("CHESTNUT_ROUTE_PREFIX", ""),
-        ]);
-
-        return ['code' => 200, 'message' => 'request success', 'data' => $data];
-    });
-});

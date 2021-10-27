@@ -2,6 +2,7 @@
 
 namespace Chestnut\Dashboard\ORMDriver;
 
+use Chestnut\Dashboard\Nut;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -13,6 +14,11 @@ class EloquentDriver extends Driver
      * @var array
      */
     public $with;
+
+    public function getResource(Nut $nut)
+    {
+        return new EloquentResource($nut);
+    }
 
     /**
      * Generate Eloquent query

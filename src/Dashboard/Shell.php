@@ -8,6 +8,7 @@ use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Container\Container as Application;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use JsonSerializable;
 use ReflectionClass;
 
@@ -77,7 +78,8 @@ class Shell implements Jsonable, JsonSerializable
     public function toArray()
     {
         return [
-            "data" => $this->repositoryRegistrar->getViews()
+            "nuts" => $this->repositoryRegistrar->getViews(),
+            "modifiedAt" => File::lastModified(config("chestnut.dashboard.nutsIn"))
         ];
     }
 

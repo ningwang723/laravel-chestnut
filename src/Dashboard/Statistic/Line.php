@@ -11,26 +11,7 @@ abstract class Line extends Statistic
 {
     protected $component = "statistic-line";
 
-    protected $options = [
-        "responsive" => true,
-        "maintainAspectRatio" => false,
-        "title" => [
-            "display" => false
-        ],
-        "scales" => [
-            "x" => [
-                "display" => false
-            ],
-            "y" => [
-                "display" => false
-            ]
-        ],
-        "plugins" => [
-            "legend" => [
-                "display" => false
-            ]
-        ]
-    ];
+    protected $options = [];
 
     public function title()
     {
@@ -51,15 +32,15 @@ abstract class Line extends Statistic
     {
         $datasets = [
             [
-                "label" => $this->title(),
-                "backgroundColor" => "rgba(254,120,57,.4)",
-                "borderColor" => "#fe7839",
+                "name" => $this->title(),
+                // "backgroundColor" => "rgba(254,120,57,.4)",
+                // "borderColor" => "#fe7839",
                 "data" => $data,
-                "fill" => true,
+                // "fill" => true,
             ]
         ];
 
-        return ["datasets" => $datasets];
+        return $datasets;
     }
 
     public function countByDays(Request $request, $class)
@@ -74,6 +55,18 @@ abstract class Line extends Statistic
         $count = $this->byMonths($request, $class);
 
         return $this->toResponse($count);
+    }
+
+    protected function convertData($data, $period)
+    {
+        $statistic = [];
+
+        foreach ($period as $day) {
+            $count = $data->where("date", $day->toDateString())->first();
+            array_push($statistic, [$day->toDateString(),  $count ? $count->count : 0]);
+        }
+
+        return $statistic;
     }
 
     public function byDays(Request $request, $class)
@@ -93,12 +86,7 @@ abstract class Line extends Statistic
 
         $period = $start->toPeriod($end->addDays(1), '1 day')->excludeStartDate();
 
-        $statistic = [];
-
-        foreach ($period as $day) {
-            $count = $counts->where("date", $day->toDateString())->first();
-            $statistic[$day->toDateString()] = $count ? $count->count : 0;
-        }
+        $statistic = $this->convertData($counts, $period);
 
         return $statistic;
     }
@@ -121,12 +109,7 @@ abstract class Line extends Statistic
 
         $period = new CarbonPeriod($start, "{$range} days", $end);
 
-        $statistic = [];
-
-        foreach ($period as $day) {
-            $count = $counts->where("date", $day->toDateString())->first();
-            $statistic[$day->toDateString()] = $count ? $count->count : 0;
-        }
+        $statistic = $this->convertData($counts, $period);
 
         return $statistic;
     }

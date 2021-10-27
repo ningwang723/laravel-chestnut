@@ -12,16 +12,13 @@ class RepositoryView implements Jsonable, JsonSerializable
 
     protected $repository;
 
-    protected $changed;
-
     protected $instance;
 
     protected $views;
 
-    public function __construct($repository, $changed)
+    public function __construct($repository)
     {
         $this->repository = $repository;
-        $this->changed = $changed;
 
         $this->views =
             empty($this->repository::$views) ? $this->viewDefaults : $this->repository::$views;
@@ -49,9 +46,7 @@ class RepositoryView implements Jsonable, JsonSerializable
         $views = [];
 
         foreach ($this->getViews() as $view) {
-            if (auth("chestnut")->user()->can("{$this->repository} {ucfirst($view)}")) {
-                array_push($views, $this->{'make' . ucfirst($view)}());
-            }
+            array_push($views, $this->{'make' . ucfirst($view)}());
         }
 
         return $views;
@@ -64,10 +59,6 @@ class RepositoryView implements Jsonable, JsonSerializable
 
     public function makeIndex()
     {
-        if (!$this->changed && Cache::has($this->getCacheKey("index"))) {
-            return Cache::get($this->getCacheKey("index"));
-        }
-
         $repository = $this->getRepository();
 
         $view = [
@@ -75,20 +66,17 @@ class RepositoryView implements Jsonable, JsonSerializable
             "text" => $repository->title(),
             "path" => "/" . $repository->getName(),
             "group" => $repository->group(),
-            "component" => "Index"
+            "component" => "Index",
+            "fields" => $repository->getFields()->injectRelations($repository)->toFront(),
+            "actions" => $repository->actions(),
+            "cards" => $repository->cards()
         ];
-
-        Cache::forever($this->getCacheKey("index"), $view);
 
         return $view;
     }
 
     public function makeCreate()
     {
-        if (!$this->changed && Cache::has($this->getCacheKey("create"))) {
-            return Cache::get($this->getCacheKey("create"));
-        }
-
         $repository = $this->getRepository();
 
         $view =  [
@@ -96,50 +84,41 @@ class RepositoryView implements Jsonable, JsonSerializable
             "name" => "{$repository->getName()}.create",
             "text" =>
             "新建{$repository->title()}",
-            "component" => "Form"
+            "component" => "Form",
+            "fields" => $repository->getFields("create")->injectRelations($repository)->toFront()
         ];
-
-        Cache::forever($this->getCacheKey("create"), $view);
 
         return $view;
     }
 
     public function makeEdit()
     {
-        if (!$this->changed && Cache::has($this->getCacheKey("edit"))) {
-            return Cache::get($this->getCacheKey("edit"));
-        }
-
         $repository = $this->getRepository();
 
         $view = [
             "path" => ":id/edit",
             "name" => "{$repository->getName()}.edit",
             "text" => "修改{$repository->title()}",
-            "component" => "Form"
+            "component" =>
+            "Form",
+            "fields" => $repository->getFields("edit")->injectRelations($repository)->toFront()
         ];
-
-        Cache::forever($this->getCacheKey("edit"), $view);
 
         return $view;
     }
 
     public function makeDetail()
     {
-        if (!$this->changed && Cache::has($this->getCacheKey("detail"))) {
-            return Cache::get($this->getCacheKey("detail"));
-        }
-
         $repository = $this->getRepository();
 
         $view = [
             "path" => ":id",
             "name" => "{$repository->getName()}.detail",
             "text" => "{$repository->title()}详情",
-            "component" => "Detail"
+            "component" =>
+            "Detail",
+            "fields" => $repository->getFields("detail")->injectRelations($repository)->toFront()
         ];
-
-        Cache::forever($this->getCacheKey("detail"), $view);
 
         return $view;
     }

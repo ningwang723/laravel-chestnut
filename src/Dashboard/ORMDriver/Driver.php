@@ -2,6 +2,8 @@
 
 namespace Chestnut\Dashboard\ORMDriver;
 
+use Chestnut\Dashboard\Nut;
+
 abstract class Driver
 {
     /**
@@ -20,6 +22,8 @@ abstract class Driver
     {
         $this->model = $name;
     }
+
+    abstract public function getResource(Nut $nut);
 
     /**
      * Set relations for driver

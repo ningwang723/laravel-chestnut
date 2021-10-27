@@ -2,12 +2,6 @@
 
 namespace Chestnut\Providers;
 
-use Chestnut\Auth\Nuts\Manager;
-use Chestnut\Auth\Nuts\Permission;
-use Chestnut\Auth\Nuts\Role;
-use Chestnut\Dashboard\Uploader\Uploader;
-use Illuminate\Support\Facades\Gate;
-
 class LaravelServiceProvider extends AbstractServiceProvider
 {
     /**
