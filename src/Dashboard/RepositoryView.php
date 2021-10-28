@@ -69,7 +69,8 @@ class RepositoryView implements Jsonable, JsonSerializable
             "component" => "Index",
             "fields" => $repository->getFields()->injectRelations($repository)->toFront(),
             "actions" => $repository->actions(),
-            "cards" => $repository->cards()
+            "cards" => $repository->cards(),
+            "readonly" => $repository->readonly
         ];
 
         return $view;

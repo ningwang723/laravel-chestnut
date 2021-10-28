@@ -19,6 +19,8 @@ abstract class Nut extends Repository
      */
     public static $showOnMenu = true;
 
+    public $readonly;
+
     public function title()
     {
         return $this->getName();
