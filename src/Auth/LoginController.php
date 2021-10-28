@@ -53,7 +53,7 @@ class LoginController extends Controller
 
                 if ($user = User::where('openid', $data->openid)->first()) {
                     $user->session_key = $data->session_key;
-                    $token             = auth("api")->login($user);
+                    $token             = $user->createToken($request->data->openid);
 
                     if ($request->phone !== null) {
                         $user->openid = $data->openid;
@@ -91,7 +91,7 @@ class LoginController extends Controller
                         $data
                     );
 
-                    $token = auth("api")->login($user);
+                    $token             = $user->createToken($request->data->openid);
 
                     return $this->respondWithTokenForWechat($token, $user->id);
                 }
@@ -191,7 +191,6 @@ class LoginController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type'   => 'bearer',
-            'expires_in'   => auth('api')->factory()->getTTL() * 60,
             'share_code'   => $shareId,
         ]);
     }

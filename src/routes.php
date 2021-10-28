@@ -10,10 +10,9 @@ Route::middleware(['web'])->prefix("chestnut")
 
             Route::post('login', 'LoginController@login');
 
-            Route::post('wechat_login', 'LoginController@wechat_login');
+
             Route::post('logout', 'LoginController@logout');
             Route::post('refresh', 'LoginController@refresh');
-            Route::post('wechat_refresh', 'LoginController@wechat_refresh');
         });
 
         Route::middleware("auth:sanctum")->post('statistic', function (Request $request) {
@@ -33,3 +32,7 @@ Route::middleware(['web'])->prefix("chestnut")
             return ['code' => 200, 'message' => 'request success', 'data' => $data];
         });
     });
+
+Route::middleware(['api'])->prefix("api")->group(function () {
+    Route::post('wechat_login', 'LoginController@wechat_login');
+});
