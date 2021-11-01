@@ -33,6 +33,6 @@ Route::middleware(['web'])->prefix("chestnut")
         });
     });
 
-Route::middleware(['api'])->prefix("api")->group(function () {
+Route::namespace("Chestnut\Auth")->middleware(['api'])->prefix("api")->group(function () {
     Route::post('wechat_login', 'LoginController@wechat_login');
 });

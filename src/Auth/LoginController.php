@@ -53,7 +53,7 @@ class LoginController extends Controller
 
                 if ($user = User::where('openid', $data->openid)->first()) {
                     $user->session_key = $data->session_key;
-                    $token             = $user->createToken($request->data->openid);
+                    $token             = $user->createToken($data->openid);
 
                     if ($request->phone !== null) {
                         $user->openid = $data->openid;
@@ -68,7 +68,7 @@ class LoginController extends Controller
 
                     event(new WechatRegisterEvent($user, $request->parent_code));
 
-                    return $this->respondWithTokenForWechat($token, $user->id);
+                    return $this->respondWithTokenForWechat($token->plainTextToken, $user->id);
                 } else {
                     if ($request->phone !== null) {
                         return [
@@ -91,9 +91,10 @@ class LoginController extends Controller
                         $data
                     );
 
-                    $token             = $user->createToken($request->data->openid);
+                    $token             =
+                        $user->createToken($data['openid']);
 
-                    return $this->respondWithTokenForWechat($token, $user->id);
+                    return $this->respondWithTokenForWechat($token->plainTextToken, $user->id);
                 }
 
                 return ["code" => $data->errcode, "errmsg" => $data->errmsg];
@@ -174,7 +175,7 @@ class LoginController extends Controller
         return response()->json([
             "errno"       => 0,
             'access_token'      => $token,
-            'token_type' => 'bearer',
+            'token_type' => 'Bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
         ]);
     }
@@ -190,7 +191,7 @@ class LoginController extends Controller
     {
         return response()->json([
             'access_token' => $token,
-            'token_type'   => 'bearer',
+            'token_type'   => 'Bearer',
             'share_code'   => $shareId,
         ]);
     }
