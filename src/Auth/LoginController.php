@@ -114,7 +114,7 @@ class LoginController extends Controller
      */
     public function me(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user("sanctum");
 
         if ($user->roles->where('name', 'Chestnut Manager')) {
             $user->isSuper = true;
