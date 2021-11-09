@@ -39,7 +39,7 @@ class NutRoleCommand extends Command
     {
         $role = $this->argument('role');
 
-        $this->call("permission:create-role", ["name" => $role]);
+        $this->call("permission:create-role", ["name" => $role, "guard" => "chestnut"]);
         return 0;
     }
 }

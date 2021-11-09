@@ -37,6 +37,7 @@ class NutInstallCommand extends Command
      */
     public function handle()
     {
+        $this->call('vendor:publish', ['--provider' => 'Spatie\Permission\PermissionServiceProvider']);
         $this->call('vendor:publish', ['--provider' => 'Chestnut\ChestnutServiceProvider']);
         $this->call('storage:link');
         $this->call('migrate');
