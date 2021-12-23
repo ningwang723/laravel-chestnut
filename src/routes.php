@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
-Route::middleware(['web'])->prefix("chestnut")
+Route::middleware(['web'])->prefix(env("VITE_ROUTE_PREFIX", 'chestnut') . '/api')
     ->group(function () {
         Route::namespace("Chestnut\Auth")->group(function () {
             Route::middleware('auth:sanctum')->get('profile', 'LoginController@me');

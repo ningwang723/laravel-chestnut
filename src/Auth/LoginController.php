@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Chestnut\Auth\Events\WechatRegisterEvent;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 
 class LoginController extends Controller
@@ -116,13 +117,28 @@ class LoginController extends Controller
     {
         $user = $request->user("sanctum");
 
-        if ($user->roles->where('name', 'Chestnut Manager')) {
-            $user->isSuper = true;
-        }
-
         $user->roles->makeHidden("pivot");
 
-        return $user;
+        $nuts = File::files(config("chestnut.dashboard.nutsIn"));
+
+        $nutsLastModifiedAt = array_reduce($nuts, function ($prev, $nut) {
+            if ($prev < $nut->getMTime()) {
+                $prev = $nut->getMTime();
+            }
+
+            return $prev;
+        }, 0);
+
+        $clientModifiedAt = intval($request->cookie("chestnut_modified_at", 0));
+
+        $data = ["profile" => $user];
+
+        if ($clientModifiedAt < $nutsLastModifiedAt) {
+            $settings = app("shell")->jsonSerialize();
+            $data = array_merge($data, $settings);
+        }
+
+        return response()->json($data)->cookie("chestnut_modified_at", $nutsLastModifiedAt, 1440);
     }
 
     /**

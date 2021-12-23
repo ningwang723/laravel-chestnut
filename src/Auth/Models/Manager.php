@@ -29,10 +29,10 @@ class Manager extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'api_token', 'refresh_token', 'session_key', 'openid', 'remember_token', 'created_at', 'updated_at', 'deleted_at'
+        'password', 'api_token', 'refresh_token', 'session_key', 'openid', 'remember_token',  'updated_at', 'deleted_at'
     ];
 
-    protected $with = ['roles:id,name', 'permissions'];
+    // protected $with = ['roles:id,name', 'permissions'];
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.

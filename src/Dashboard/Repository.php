@@ -63,6 +63,21 @@ abstract class Repository extends Controller
         return [];
     }
 
+    public function rowActions()
+    {
+        return [];
+    }
+
+    public function defaultRowActions()
+    {
+        return ['detail', 'edit', 'delete'];
+    }
+
+    public function getRowActions()
+    {
+        return array_merge($this->rowActions(), $this->defaultRowActions());
+    }
+
     public function getORMDriver($driver = null): Driver
     {
         if (is_null($driver)) {

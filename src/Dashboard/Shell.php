@@ -78,8 +78,7 @@ class Shell implements Jsonable, JsonSerializable
     public function toArray()
     {
         return [
-            "nuts" => $this->repositoryRegistrar->getViews(),
-            "modifiedAt" => File::lastModified(config("chestnut.dashboard.nutsIn"))
+            "nuts" => $this->repositoryRegistrar->getViews()
         ];
     }
 

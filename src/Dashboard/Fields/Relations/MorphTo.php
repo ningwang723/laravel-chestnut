@@ -4,16 +4,36 @@ namespace Chestnut\Dashboard\Fields\Relations;
 
 class MorphTo extends RelationField
 {
-    public function morphType()
+    protected $morph;
+
+    /**
+     * @param string $morph morph relation name
+     */
+    public function __construct(string $model, string $morph, string $label)
     {
-        return $this->relation . "_type";
+        $this->morph = $morph;
+
+        parent::__construct($model, $label);
     }
 
-    public function prepareQuery($query)
+    public function getRelation()
     {
-        $query = $query->addSelect($this->morphType());
+        return $this->morph;
+    }
 
-        return parent::prepareQuery($query);
+    /**
+     * Get morph relation type
+     *
+     * @return string
+     */
+    public function morphType()
+    {
+        return $this->morph . "_type";
+    }
+
+    public function relationKey()
+    {
+        return $this->morph . "_" . $this->key();
     }
 
     public function hiddenProperties()

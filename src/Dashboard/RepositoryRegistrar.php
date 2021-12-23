@@ -47,7 +47,7 @@ class RepositoryRegistrar
 
         $callback = $callback->bindTo($this);
 
-        $this->router->group(['prefix' => "chestnut/" . $prefix, 'middleware' => ['web', 'auth:sanctum']], $callback);
+        $this->router->group(['prefix' => env("VITE_ROUTE_PREFIX", 'chestnut') . '/api/' . $prefix, 'middleware' => ['web', 'auth:sanctum']], $callback);
 
         $this->views->add(new RepositoryView($repository));
     }

@@ -67,8 +67,9 @@ class RepositoryView implements Jsonable, JsonSerializable
             "path" => "/" . $repository->getName(),
             "group" => $repository->group(),
             "component" => "Index",
-            "fields" => $repository->getFields()->injectRelations($repository)->toFront(),
+            "fields" => $repository->getFields()->toFront(),
             "actions" => $repository->actions(),
+            "row-actions" => $repository->getRowActions(),
             "cards" => $repository->cards(),
             "readonly" => $repository->readonly
         ];
@@ -86,7 +87,7 @@ class RepositoryView implements Jsonable, JsonSerializable
             "text" =>
             "新建{$repository->title()}",
             "component" => "Form",
-            "fields" => $repository->getFields("create")->injectRelations($repository)->toFront()
+            "fields" => $repository->getFields("create")->toFront()
         ];
 
         return $view;
@@ -102,7 +103,7 @@ class RepositoryView implements Jsonable, JsonSerializable
             "text" => "修改{$repository->title()}",
             "component" =>
             "Form",
-            "fields" => $repository->getFields("edit")->injectRelations($repository)->toFront()
+            "fields" => $repository->getFields("edit")->toFront()
         ];
 
         return $view;
@@ -118,7 +119,7 @@ class RepositoryView implements Jsonable, JsonSerializable
             "text" => "{$repository->title()}详情",
             "component" =>
             "Detail",
-            "fields" => $repository->getFields("detail")->injectRelations($repository)->toFront()
+            "fields" => $repository->getFields("detail")->toFront()
         ];
 
         return $view;

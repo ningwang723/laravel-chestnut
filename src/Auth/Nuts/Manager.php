@@ -2,10 +2,9 @@
 
 namespace Chestnut\Auth\Nuts;
 
+use Chestnut\Auth\Models\Role as Role;
 use Chestnut\Dashboard\Nut;
 use Chestnut\Facades\Shell;
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
 
 class Manager extends Nut
 {
@@ -25,7 +24,7 @@ class Manager extends Nut
                 ->rules('required'),
             Shell::Avatar("avatar", "头像")->rules('required'),
             Shell::Password('password', '密码')->rules('password'),
-            Shell::HasManyThrough('roles', '角色'),
+            Shell::HasManyThrough(Role::class, '角色'),
             Shell::CreatedAt("注册时间"),
         ];
     }

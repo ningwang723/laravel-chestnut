@@ -2,13 +2,22 @@
 
 namespace Chestnut\Dashboard\Fields\Relations;
 
+use Illuminate\Support\Str;
+
 class HasManyThrough extends RelationField
 {
-    public function __construct(string $relation, string $label)
+    public function __construct(string $model, string $label)
     {
-        parent::__construct($relation, $label);
+        parent::__construct($model, $label);
 
         $this->multiple();
+    }
+
+    public function getRelation()
+    {
+        $relation = parent::getRelation();
+
+        return Str::plural($relation);
     }
 
     public function relationKey()
@@ -19,11 +28,5 @@ class HasManyThrough extends RelationField
     public function key()
     {
         return null;
-    }
-
-    public function prepareQuery($query)
-    {
-        return $query->select("id")->first()->{$this->relation}()->getRelated()
-            ->select('id', $this->title());
     }
 }

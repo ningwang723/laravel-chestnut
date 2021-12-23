@@ -19,6 +19,9 @@ class Select extends Field
             $options = $options->pluck($label_prop, $value_prop);
         }
 
+        $this->setAttribute("label", $label_prop);
+        $this->setAttribute("value", $value_prop);
+
         return $this->setAttribute('options', $options);
     }
 

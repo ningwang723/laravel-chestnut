@@ -19,12 +19,14 @@ class File extends Field
 
     public function fillAttributeFromRequest(Request $request, $model)
     {
-        $value = $request[$this->getProperty()];
+        if ($request->exists($this->getProperty())) {
+            $value = $request[$this->getProperty()];
 
-        if ($value instanceof UploadedFile) {
-            $value = URL::to($value->store(config("chestnut.dashboard.upload_storage")));
+            if ($value instanceof UploadedFile) {
+                $value = URL::to($value->store(config("chestnut.dashboard.upload_storage")));
+            }
+
+            $model->{$this->getProperty()} = $value;
         }
-
-        $model->{$this->getProperty()} = $value;
     }
 }

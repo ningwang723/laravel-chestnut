@@ -3,12 +3,10 @@
 namespace Chestnut\Dashboard\ORMDriver;
 
 use Chestnut\Contracts\Dashboard\Resource as ResourceContract;
-use Chestnut\Dashboard\Fields\Relations\HasMany;
 use Chestnut\Dashboard\Fields\Relations\HasManyThrough;
 use Chestnut\Dashboard\Fields\Relations\MorphTo;
-use Chestnut\Dashboard\GetResourceNames;
+use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class EloquentResource implements ResourceContract
 {
@@ -101,7 +99,10 @@ class EloquentResource implements ResourceContract
 
         $this->applyAttributesToModel("create", $request, $model);
 
-        $model->publisher()->associate(auth("chestnut")->user());
+        try {
+            $model->publisher()->associate(auth("sanctum")->user());
+        } catch (Exception $e) {
+        }
 
         return $model->save();
     }
@@ -141,7 +142,7 @@ class EloquentResource implements ResourceContract
         $requestRelations = [];
 
         foreach ($relations as $relation) {
-            $requestRelations[$relation->relation] =  function ($query) use ($relation) {
+            $requestRelations[$relation->getRelation()] =  function ($query) use ($relation) {
                 $query->select("id", $relation->title());
             };
         }
